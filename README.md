@@ -71,3 +71,4 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 # byu-590r-backend-php
 # byu-590r-frontend-vue
 # byu-590r-backend-php
+# byu-590r-frontend-vue
