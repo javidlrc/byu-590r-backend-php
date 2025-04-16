@@ -22,8 +22,6 @@ return new class extends Migration
             $table->string('favAlbum')->nullable(); // Added field for favorite album
             $table->string('country')->nullable(); // Added field for country
             $table->string('file'); // Path to file (image)
-            $table->integer('checked_qty')->default(0); // Changed to integer
-            $table->integer('inventory_total_qty')->default(0); // Changed to integer
             $table->timestamps();
         });
     }

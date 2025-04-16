@@ -17,9 +17,7 @@ class Artist extends Model
         'favSong',
         'favAlbum',
         'country',
-        'file',
-        'checked_qty',
-        'inventory_total_qty',
+        'file'
     ];
 
     public function genre(): HasOne {
