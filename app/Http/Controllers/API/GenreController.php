@@ -12,7 +12,7 @@ class GenreController extends BaseController
      */
     public function index()
     {
-        //
+        return response()->json(Genre::all());
     }
 
     /**

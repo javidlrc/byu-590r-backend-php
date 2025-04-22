@@ -4,6 +4,7 @@ use App\Http\Controllers\API\BaseController;
 use App\Http\Controllers\API\RegisterController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\ArtistController;
+use App\Http\Controllers\API\GenreController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,8 @@ Route::middleware('auth:sanctum')->group( function () {
     });
 
     Route::resource('artists', ArtistController::class);
+    Route::get('/genres', [GenreController::class, 'index']);
+
 });
 
 // Fetch all books

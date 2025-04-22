@@ -10,7 +10,7 @@ class ArtistController extends BaseController
 {
     public function index()
     {
-       $artists = Artist::get();
+       $artists = Artist::with('genre')->get(); // eager load the genre
 
        foreach($artists as $artist){
         $artist ->file = $this->getS3url($artist->file);
@@ -20,49 +20,65 @@ class ArtistController extends BaseController
     }
 
     public function update(Request $request, $id)
-    {
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'sometimes',
+        'description' => 'sometimes',
+        'favoriteSong' => 'sometimes',
+        'favAlbum' => 'sometimes',
+        'country' => 'sometimes',
+        'genre_id' => 'sometimes',
+        'file' => 'nullable|image'
+    ]);
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes',
-            'description' => 'sometimes',
-            'favoriteSong' => 'sometimes',
-            'favAlbum' => 'sometimes',
-            'country' => 'sometimes',
-            'genre_id' => 'sometimes'
-        ]);
-   
-        if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());       
-        }
-
-        $artist = Artist::findOrFail($id);
-
-        $artist->name = $request->name ?? 'Test';
-        $artist->description = $request->description ?? 'Test description';
-        $artist->favoriteSong = $request->favoriteSong;
-        $artist->favAlbum = $request->favAlbum;
-        $artist->country = $request->country;
-        $artist->genre_id = $request->genre_id ?? 2;
-
-        // if(isset($artist->file)){
-        //     $artist->file = $this->getS3Url($artist->file);
-        // }
-
-        $artist->save();
-
-        $success['artist'] = $artist;
-        return $this->sendResponse($success, 'Artist Updated');
+    if ($validator->fails()) {
+        return $this->sendError('Validation Error.', $validator->errors());
     }
 
+    $artist = Artist::findOrFail($id);
+
+    // Assign values
+    $artist->fill([
+        'name' => $request->get('name', $artist->name),
+        'description' => $request->get('description', $artist->description),
+        'favoriteSong' => $request->get('favoriteSong', $artist->favoriteSong),
+        'favAlbum' => $request->get('favAlbum', $artist->favAlbum),
+        'country' => $request->get('country', $artist->country),
+        'genre_id' => $request->get('genre_id', $artist->genre_id),
+    ]);
+
+    // Handle file upload
+    if ($request->hasFile('file')) {
+        $extension = $request->file('file')->getClientOriginalExtension();
+        $image_name = time() . '_artist_cover.' . $extension;
+        $path = $request->file('file')->storeAs('images', $image_name, 's3');
+        Storage::disk('s3')->setVisibility($path, 'public');
+        $artist->file = $path;
+    }
+
+    // Save explicitly
+    $saved = $artist->save();
+
+    $artist->load('genre');
+    $artist->file = $this->getS3url($artist->file);
+
+    return $this->sendResponse(['artist' => $artist], 'Artist Updated');
+}
 
 
+
+    /**
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
     public function destroy($id)
     {
         $artist = Artist::findOrFail($id);
+        Storage::disk('s3')->delete($artist->file);
         $artist->delete();
 
-        $success['artist'] = $artist;
-        return $this->sendResponse($success, 'Artist Deleted');
+        $success['artist']['id'] = $artist;
+        return $this->sendResponse(['id' => $artist->id], 'Artist Deleted');
     }
 
     public function store(Request $request)
