@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group( function () {
     });
 
     Route::resource('artists', ArtistController::class);
+
     Route::get('/genres', [GenreController::class, 'index']);
 
 });

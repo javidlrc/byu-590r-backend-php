@@ -14,11 +14,11 @@ class Artist extends Model
         'genre_id',
         'name',
         'description',
-        'favSong',
+        'favoriteSong',  // ✅ correct spelling to match controller/database
         'favAlbum',
         'country',
         'file'
-    ];
+    ];    
 
     public function genre(): HasOne {
         return $this->hasOne(Genre::class, 'id', 'genre_id');

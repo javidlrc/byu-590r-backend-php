@@ -5,6 +5,8 @@ use App\Models\Artist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
 
 class ArtistController extends BaseController
 {
@@ -19,25 +21,11 @@ class ArtistController extends BaseController
        return $this->sendResponse($artists, 'Artists');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Artist $artist)
 {
-    $validator = Validator::make($request->all(), [
-        'name' => 'sometimes',
-        'description' => 'sometimes',
-        'favoriteSong' => 'sometimes',
-        'favAlbum' => 'sometimes',
-        'country' => 'sometimes',
-        'genre_id' => 'sometimes',
-        'file' => 'nullable|image'
-    ]);
+    // no need for findOrFail
+    Log::info('🎯 ArtistController@update HIT!');
 
-    if ($validator->fails()) {
-        return $this->sendError('Validation Error.', $validator->errors());
-    }
-
-    $artist = Artist::findOrFail($id);
-
-    // Assign values
     $artist->fill([
         'name' => $request->get('name', $artist->name),
         'description' => $request->get('description', $artist->description),
@@ -47,7 +35,6 @@ class ArtistController extends BaseController
         'genre_id' => $request->get('genre_id', $artist->genre_id),
     ]);
 
-    // Handle file upload
     if ($request->hasFile('file')) {
         $extension = $request->file('file')->getClientOriginalExtension();
         $image_name = time() . '_artist_cover.' . $extension;
@@ -56,14 +43,13 @@ class ArtistController extends BaseController
         $artist->file = $path;
     }
 
-    // Save explicitly
-    $saved = $artist->save();
-
+    $artist->save();
     $artist->load('genre');
     $artist->file = $this->getS3url($artist->file);
 
     return $this->sendResponse(['artist' => $artist], 'Artist Updated');
 }
+
 
 
 
